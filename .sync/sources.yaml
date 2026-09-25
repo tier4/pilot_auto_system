@@ -23,14 +23,20 @@ sources:
   autoware_universe:
     upstream: https://github.com/autowarefoundation/autoware_universe.git
     ref: main
-    # Flat name kept: awf-latest/universe cannot coexist with the existing
-    # awf-latest branch, and deleting it is refused by the organisation rulesets.
-    mirror_branch: awf-latest
+    # New tip: path filter differs from the historical awf-latest tip (which
+    # still contains default ADAPI packages), so this cannot fast-forward
+    # awf-latest and is published under a new name instead.
+    mirror_branch: awf-latest-no-adapi
     paths:
-      - path: system/
+      # Keep system/ except packages that live under autoware_api instead:
+      #   autoware_default_adapi_universe
+      #   autoware_default_adapi_helpers/autoware_adapi_visualizers
+      #   autoware_default_adapi_helpers/autoware_automatic_pose_initializer
+      # (the helpers directory only contains those two packages today.)
+      - regex: '^system/(?!autoware_default_adapi_universe(?:/|$)|autoware_default_adapi_helpers(?:/|$)).*'
       - path: .github/
       - path: docs/
-      - regex: ^[^/]*$ # root-level files (LICENSE, NOTICE, ...)
+      - regex: '^[^/]*$' # root-level files (LICENSE, NOTICE, ...)
     message_rules:
       - pattern: '#(\d+)'
         replacement: autowarefoundation/autoware_universe#\1
@@ -43,7 +49,7 @@ sources:
       - path: system/
       - path: .github/
       - path: docs/
-      - regex: ^[^/]*$ # root-level files (LICENSE, NOTICE, ...)
+      - regex: '^[^/]*$' # root-level files (LICENSE, NOTICE, ...)
     # Commits authored before the fork point still refer to upstream pull
     # requests; later ones refer to the TIER IV fork.
     message_rules:
