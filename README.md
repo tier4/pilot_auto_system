@@ -60,10 +60,34 @@ Without `--push`, `tools/mirror.py mirror` is a dry run.
 
 ### Manual sync
 
-```bash
-# All sources
-PUSH=1 ./tools/manual_sync.sh
+Publishing is **fast-forward only** (never `--force`). This is the local
+equivalent of `.github/workflows/mirror.yaml`.
 
+```bash
+git checkout ci && git pull origin ci
+python3 -m pip install pyyaml 'git-filter-repo==2.47.0'
+
+PUSH=0 ./tools/manual_sync.sh   # dry run (build only)
+PUSH=1 ./tools/manual_sync.sh   # push to origin
+```
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `PUSH` | `1` | Set `0` for a dry run |
+| `DOWNSTREAM` | `git@github.com:tier4/pilot_auto_system.git` | Git remote to push |
+| `WORK` | `/tmp/pilot_auto_system-sync` | Scratch directory for clones |
+| `SOURCES` | *(all sources)* | Space-separated source names to mirror only |
+
+Examples:
+
+```bash
 # awf-latest-no-adapi only
 SOURCES=autoware_universe PUSH=1 ./tools/manual_sync.sh
+
+# one source via mirror.py
+export PYTHONPATH="$PWD/tools${PYTHONPATH:+:$PYTHONPATH}"
+tools/mirror.py mirror autoware_universe \
+  --work /tmp/pilot_auto_system-sync/mirror \
+  --downstream git@github.com:tier4/pilot_auto_system.git \
+  --push
 ```
