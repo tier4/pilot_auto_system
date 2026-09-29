@@ -33,29 +33,10 @@ sources:
       #   autoware_default_adapi_helpers/autoware_adapi_visualizers
       #   autoware_default_adapi_helpers/autoware_automatic_pose_initializer
       # (the helpers directory only contains those two packages today.)
-      - regex: '^system/(?!autoware_default_adapi_universe(?:/|$)|autoware_default_adapi_helpers(?:/|$)).*'
+      - regex: ^system/(?!autoware_default_adapi_universe(?:/|$)|autoware_default_adapi_helpers(?:/|$)).*
       - path: .github/
       - path: docs/
-      - regex: '^[^/]*$' # root-level files (LICENSE, NOTICE, ...)
+      - regex: ^[^/]*$ # root-level files (LICENSE, NOTICE, ...)
     message_rules:
       - pattern: '#(\d+)'
         replacement: autowarefoundation/autoware_universe#\1
-
-  tier4_universe_e2e:
-    upstream: https://github.com/tier4/autoware_universe.git
-    ref: feat/v0.64/e2e
-    mirror_branch: feat/v0.64/e2e
-    paths:
-      - path: system/
-      - path: .github/
-      - path: docs/
-      - regex: '^[^/]*$' # root-level files (LICENSE, NOTICE, ...)
-    # Commits authored before the fork point still refer to upstream pull
-    # requests; later ones refer to the TIER IV fork.
-    message_rules:
-      - until: 2026-02-21T00:00:00Z
-        pattern: '#(\d+)'
-        replacement: autowarefoundation/autoware_universe#\1
-      - since: 2026-02-21T00:00:00Z
-        pattern: (?<!autowarefoundation)(?<!autowarefoundation/autoware_universe)#(\d+)
-        replacement: tier4/autoware_universe#\1
