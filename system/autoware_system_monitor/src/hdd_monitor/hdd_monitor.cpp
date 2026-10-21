@@ -55,6 +55,30 @@ bool is_non_scsi_device(const std::string & device_name)
   // clang-format on
 }
 
+/**
+ * @brief resolve device-mapper device (e.g. LUKS: /dev/mapper/xxx) to underlying device
+ * @param [in] device device name
+ * @return underlying device name, or given device name if it is not a device-mapper device
+ */
+std::string resolve_dm_device(const std::string & device)
+{
+  std::error_code ec;
+  // e.g. /dev/mapper/xxx -> /dev/dm-0
+  const std::filesystem::path real_path = std::filesystem::canonical(device, ec);
+  if (ec || !boost::starts_with(real_path.filename().string(), "dm-")) {
+    return device;
+  }
+
+  const std::filesystem::path slaves_path =
+    std::filesystem::path("/sys/block") / real_path.filename() / "slaves";
+  for (const auto & entry : std::filesystem::directory_iterator(slaves_path, ec)) {
+    // Resolve recursively for stacked device-mapper devices (e.g. LVM on LUKS)
+    return resolve_dm_device("/dev/" + entry.path().filename().string());
+  }
+
+  return device;
+}
+
 }  // namespace
 
 namespace bp = boost::process;
@@ -865,15 +889,16 @@ void HddMonitor::updateHddConnections()
       if (std::filesystem::exists(hdd_param.second.part_device_, ec)) {
         hdd_connected_flags_[hdd_param.first] = true;
 
+        // Resolve device-mapper device (e.g. encrypted partition) to physical partition device
+        const std::string phys_part_device = resolve_dm_device(hdd_param.second.part_device_);
+
         // Remove index number of partition for passing device name to hdd-reader
-        if (boost::starts_with(hdd_param.second.part_device_, "/dev/sd")) {
+        if (boost::starts_with(phys_part_device, "/dev/sd")) {
           const std::regex pattern("\\d+$");
-          hdd_param.second.disk_device_ =
-            std::regex_replace(hdd_param.second.part_device_, pattern, "");
-        } else if (is_non_scsi_device(hdd_param.second.part_device_)) {
+          hdd_param.second.disk_device_ = std::regex_replace(phys_part_device, pattern, "");
+        } else if (is_non_scsi_device(phys_part_device)) {
           const std::regex pattern("p\\d+$");
-          hdd_param.second.disk_device_ =
-            std::regex_replace(hdd_param.second.part_device_, pattern, "");
+          hdd_param.second.disk_device_ = std::regex_replace(phys_part_device, pattern, "");
         }
 
         const std::regex raw_pattern(".*/");
