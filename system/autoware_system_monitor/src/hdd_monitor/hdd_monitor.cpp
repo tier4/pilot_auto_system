@@ -55,17 +55,13 @@ bool is_non_scsi_device(const std::string & device_name)
   // clang-format on
 }
 
-/**
- * @brief resolve device-mapper device (e.g. LUKS: /dev/mapper/xxx) to underlying device
- * @param [in] device device name
- * @return underlying device name, or given device name if it is not a device-mapper device
- */
 std::string resolve_dm_device(const std::string & device)
 {
   std::error_code ec;
   // e.g. /dev/mapper/xxx -> /dev/dm-0
   const std::filesystem::path real_path = std::filesystem::canonical(device, ec);
-  if (ec || !boost::starts_with(real_path.filename().string(), "dm-")) {
+  const bool is_dm_device = !ec && boost::starts_with(real_path.filename().string(), "dm-");
+  if (!is_dm_device) {
     return device;
   }
 
