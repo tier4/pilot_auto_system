@@ -26,14 +26,9 @@ sources:
     # New tip: path filter differs from the historical awf-latest tip (which
     # still contains default ADAPI packages), so this cannot fast-forward
     # awf-latest and is published under a new name instead.
-    mirror_branch: awf-latest-no-adapi
+    mirror_branch: awf-latest
     paths:
-      # Keep system/ except packages that live under autoware_api instead:
-      #   autoware_default_adapi_universe
-      #   autoware_default_adapi_helpers/autoware_adapi_visualizers
-      #   autoware_default_adapi_helpers/autoware_automatic_pose_initializer
-      # (the helpers directory only contains those two packages today.)
-      - regex: ^system/(?!autoware_default_adapi_universe(?:/|$)|autoware_default_adapi_helpers(?:/|$)).*
+      - path: system/
       - path: .github/
       - path: docs/
       - regex: ^[^/]*$ # root-level files (LICENSE, NOTICE, ...)
